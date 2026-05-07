@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createApiUrl } from '../../config/api';
+import { isAdminRole, isSuperAdminRole } from '../../utils/roles';
 import PSGNotification from '../../components/PSGNotification';
 import SearchableDropdown from '../../components/SearchableDropdown';
 import Avatar from '../../components/Avatar';
@@ -558,7 +559,7 @@ const AdminUsers = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Admins</p>
                 <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                  {users.filter(u => u.role === 'Admin').length}
+                  {users.filter(u => isAdminRole(u.role)).length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
@@ -594,7 +595,7 @@ const AdminUsers = () => {
               <SearchableDropdown
                 value={filters.role}
                 onChange={(value) => handleFilterChange('role', value)}
-                options={['', 'Student', 'Moderator', 'Admin']}
+                options={['', 'Student', 'Moderator', 'Admin', 'SuperAdmin']}
                 placeholder="All Roles"
                 icon={Filter}
               />
@@ -778,13 +779,15 @@ const AdminUsers = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.role === 'Admin' 
+                          isSuperAdminRole(user.role)
+                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                            : user.role === 'Admin' 
                             ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' 
                             : user.role === 'Moderator'
                               ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                               : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                         }`}>
-                          {user.role === 'Admin' && <Crown className="w-3 h-3 mr-1" />}
+                          {isAdminRole(user.role) && <Crown className="w-3 h-3 mr-1" />}
                           {user.role === 'Moderator' && <ShieldCheck className="w-3 h-3 mr-1" />}
                           {user.role === 'Student' && <GraduationCap className="w-3 h-3 mr-1" />}
                           {user.role}
@@ -815,6 +818,9 @@ const AdminUsers = () => {
                           <option value="Student">Student</option>
                           <option value="Moderator">Moderator</option>
                           <option value="Admin">Admin</option>
+                          {isSuperAdminRole(user.role) && (
+                            <option value="SuperAdmin">SuperAdmin</option>
+                          )}
                         </select>
                       </td>
                     </tr>

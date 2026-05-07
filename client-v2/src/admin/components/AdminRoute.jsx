@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import AdminLogin from './AdminLogin.jsx';
 import { checkAdminAuth } from '../utils/adminAuth';
 import { Shield, Home, Loader2 } from 'lucide-react';
+import { isAdminRole } from '../../utils/roles';
 
 const AdminRoute = ({ children }) => {
   const { user, loading, requireAuth } = useAuth();
@@ -17,13 +18,13 @@ const AdminRoute = ({ children }) => {
     }
 
     // If user exists but not admin, redirect to home
-    if (!loading && user && user.role !== 'Admin') {
+    if (!loading && user && !isAdminRole(user.role)) {
       window.location.href = '/';
       return;
     }
 
     // If user is admin, check for dual authentication
-    if (!loading && user && user.role === 'Admin') {
+    if (!loading && user && isAdminRole(user.role)) {
       const adminSession = sessionStorage.getItem('adminAuthenticated');
       if (adminSession === 'true') {
         // Verify session is still valid on server
@@ -77,7 +78,7 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  if (user.role !== 'Admin') {
+  if (!isAdminRole(user.role)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-red-900/20 flex items-center justify-center">
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20 dark:border-gray-700/30 text-center max-w-md mx-4">

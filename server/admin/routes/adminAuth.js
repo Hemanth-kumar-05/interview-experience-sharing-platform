@@ -7,6 +7,7 @@ const Notification = require('../../models/Notification');
 const User = require('../../models/User');
 const { isAdmin } = require('../../middleware/auth');
 const logger = require('../../utils/logger');
+const { isAdminRole } = require('../../utils/roles');
 
 const router = express.Router();
 
@@ -90,7 +91,7 @@ router.post('/login', adminLoginLimiter, adminLoginValidation, async (req, res) 
 
     // Verify user exists and has admin role
     const user = await User.findById(userId);
-    if (!user || user.role !== 'Admin') {
+    if (!user || !isAdminRole(user.role)) {
       logger.warn(`Admin login attempt by non-admin user: ${userId}`, {
         userId,
         ip: req.ip,
@@ -231,7 +232,7 @@ router.post('/create', adminCreateValidation, async (req, res) => {
       
     //   // Verify user is admin and admin token is valid
     //   const currentUser = await User.findById(decodedUser.userId);
-    //   if (!currentUser || currentUser.role !== 'Admin' || decodedAdmin.type !== 'admin') {
+    //   if (!currentUser || !isAdminRole(currentUser.role) || decodedAdmin.type !== 'admin') {
     //     return res.status(403).json({
     //       success: false,
     //       message: 'Insufficient permissions to create admin credentials'
@@ -266,7 +267,7 @@ router.post('/create', adminCreateValidation, async (req, res) => {
 
     // Verify target user exists and has admin role
     const targetUser = await User.findById(userId);
-    // if (!targetUser || targetUser.role !== 'Admin') {
+    // if (!targetUser || !isAdminRole(targetUser.role)) {
     //   return res.status(400).json({
     //     success: false,
     //     message: 'User must have Admin role'
@@ -491,7 +492,7 @@ router.post('/bootstrap', [
 
     // Verify target user exists and has admin role
     const targetUser = await User.findById(userId);
-    if (!targetUser || targetUser.role !== 'Admin') {
+    if (!targetUser || !isAdminRole(targetUser.role)) {
       return res.status(400).json({
         success: false,
         message: 'User must exist and have Admin role'

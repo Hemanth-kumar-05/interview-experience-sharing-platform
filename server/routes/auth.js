@@ -1,6 +1,7 @@
 const express = require('express');
 const passport = require('passport');
 const router = express.Router();
+const { isAdminRole } = require('../utils/roles');
 
 // @route   GET /auth/google
 // @desc    Start Google OAuth
@@ -37,7 +38,7 @@ router.get('/google/callback',
         }
         
         // Redirect admin users to admin panel
-        if (user.role === 'Admin') {
+        if (isAdminRole(user.role)) {
           return res.redirect(`${process.env.CLIENT_URL}/admin`);
         }
         

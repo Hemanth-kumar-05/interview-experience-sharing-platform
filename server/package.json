@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "migrate:companies": "node scripts/migrateCompanies.js"
+    "migrate:companies": "node scripts/migrateCompanies.js",
+    "seed:super-admin": "node scripts/seedSuperAdmin.js"
   },
   "keywords": [
     "interview",

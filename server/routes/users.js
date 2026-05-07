@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, param } = require('express-validator');
 const User = require('../models/User');
+const { ADMIN_ROLES, ASSIGNABLE_ROLES, isAdminRole, isSuperAdminRole } = require('../utils/roles');
 const Experience = require('../models/Experience');
 const Notification = require('../models/Notification');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
@@ -500,7 +501,7 @@ router.get('/admin/filter-options', isAdmin, async (req, res) => {
       .sort((a, b) => b - a); // Sort descending (newest first)
     
     // Get roles
-    const roleOptions = ['Student', 'Admin', 'Moderator'];
+    const roleOptions = ['Student', 'Admin', 'Moderator', 'SuperAdmin'];
 
     res.json({
       success: true,
@@ -529,12 +530,34 @@ router.put('/admin/:id/role',
   isAdmin,
   [
     param('id').isMongoId().withMessage('Invalid user ID'),
-    body('role').isIn(['Student', 'Admin', 'Moderator']).withMessage('Invalid role')
+    body('role').isIn(ASSIGNABLE_ROLES).withMessage('Invalid role')
   ],
   handleValidationErrors,
   async (req, res) => {
     try {
       const { role } = req.body;
+
+      const targetUser = await User.findById(req.params.id);
+      if (!targetUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      if (isSuperAdminRole(targetUser.role) && role !== targetUser.role) {
+        return res.status(400).json({
+          success: false,
+          message: 'SuperAdmin role cannot be changed from the admin panel'
+        });
+      }
+
+      if (req.user._id.toString() === req.params.id && !isAdminRole(role)) {
+        return res.status(400).json({
+          success: false,
+          message: 'You cannot remove your own admin privileges'
+        });
+      }
       
       const user = await User.findByIdAndUpdate(
         req.params.id,
@@ -759,7 +782,7 @@ router.post('/request-company-creation',
       const requestIdentifier = `${userId}-${companyName}-${Date.now()}`;
 
       // Get all admin users
-      const adminUsers = await User.find({ role: 'Admin' }).select('_id');
+      const adminUsers = await User.find({ role: { $in: ADMIN_ROLES } }).select('_id');
       
       if (adminUsers.length === 0) {
         return res.status(500).json({

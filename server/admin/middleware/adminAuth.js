@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const AdminAuth = require('../models/AdminAuth');
 const User = require('../../models/User');
 const logger = require('../../utils/logger');
+const { isAdminRole } = require('../../utils/roles');
 
 /**
  * Middleware to verify admin authentication (dual auth)
@@ -73,7 +74,7 @@ const requireAdminAuth = async (req, res, next) => {
 
     // Verify user exists and has admin role
     const user = await User.findById(userDecoded.userId);
-    if (!user || user.role !== 'Admin') {
+    if (!user || !isAdminRole(user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Admin role required'
@@ -134,7 +135,7 @@ const requireUserAdmin = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
       const user = await User.findById(decoded.userId);
-      if (!user || user.role !== 'Admin') {
+      if (!user || !isAdminRole(user.role)) {
         return res.status(403).json({
           success: false,
           message: 'Admin role required'

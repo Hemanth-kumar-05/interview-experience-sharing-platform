@@ -7,6 +7,7 @@ const Comment = require('../../models/Comment');
 const Company = require('../../models/Company');
 const Notification = require('../../models/Notification');
 const AdminAuth = require('../models/AdminAuth');
+const { ASSIGNABLE_ROLES, isAdminRole, isSuperAdminRole } = require('../../utils/roles');
 
 // Include auth routes
 const adminAuthRoutes = require('./adminAuth');
@@ -30,7 +31,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Check if user has admin role
-    if (req.user.role !== 'Admin') {
+    if (!isAdminRole(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Admin role required'
@@ -293,16 +294,30 @@ router.put('/users/:userId/role', isAdmin, async (req, res) => {
     const { role } = req.body;
 
     // Validate role
-    const validRoles = ['Student', 'Moderator', 'Admin'];
-    if (!validRoles.includes(role)) {
+    if (!ASSIGNABLE_ROLES.includes(role)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid role provided'
       });
     }
 
-    // Prevent admin from removing their own admin role
-    if (req.user._id.toString() === userId && role !== 'Admin') {
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (isSuperAdminRole(targetUser.role) && role !== targetUser.role) {
+      return res.status(400).json({
+        success: false,
+        message: 'SuperAdmin role cannot be changed from the admin panel'
+      });
+    }
+
+    // Prevent admins from removing their own admin access
+    if (req.user._id.toString() === userId && !isAdminRole(role)) {
       return res.status(400).json({
         success: false,
         message: 'You cannot remove your own admin privileges'

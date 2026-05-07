@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
 import { extractUserName } from '../../utils/avatar';
+import { isAdminRole } from '../../utils/roles';
 import Avatar from '../Avatar.jsx';
 import NotificationBell from '../NotificationBell.jsx';
 import { BookOpen, Sun, Moon, Plus, Bell, User, Menu, Home, FileText, Users, Info, Settings, Shield, LogOut, UserCircle, LogIn, LogInIcon, LogOutIcon, Loader, TrendingUp } from "lucide-react";
@@ -185,7 +186,7 @@ const Header = () => {
                           <span>Settings</span>
                         </Link>
                         
-                        {user?.role === 'Admin' && (
+                        {isAdminRole(user?.role) && (
                           <Link 
                             to="/admin" 
                             className="flex items-center space-x-3 px-4 py-2.5 text-sm hover:bg-blue-50 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400 transition-colors group"

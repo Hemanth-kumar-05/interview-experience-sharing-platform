@@ -1,3 +1,5 @@
+const { isAdminRole, isModeratorRole } = require('../utils/roles');
+
 const isAuthenticated = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
@@ -9,7 +11,7 @@ const isAuthenticated = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-  if (req.isAuthenticated() && req.user.role === 'Admin') {
+  if (req.isAuthenticated() && isAdminRole(req.user.role)) {
     return next();
   }
   return res.status(403).json({ 
@@ -27,7 +29,7 @@ const isAdminWithDualAuth = (req, res, next) => {
     });
   }
 
-  if (req.user.role !== 'Admin') {
+  if (!isAdminRole(req.user.role)) {
     return res.status(403).json({ 
       message: 'Admin access required',
       error: 'You do not have permission to access this resource'
@@ -46,7 +48,7 @@ const isAdminWithDualAuth = (req, res, next) => {
 };
 
 const isModerator = (req, res, next) => {
-  if (req.isAuthenticated() && (req.user.role === 'Admin' || req.user.role === 'Moderator')) {
+  if (req.isAuthenticated() && isModeratorRole(req.user.role)) {
     return next();
   }
   return res.status(403).json({ 
@@ -65,7 +67,7 @@ const isOwnerOrAdmin = async (req, res, next) => {
     }
 
     // Admin can access everything
-    if (req.user.role === 'Admin') {
+    if (isAdminRole(req.user.role)) {
       return next();
     }
 

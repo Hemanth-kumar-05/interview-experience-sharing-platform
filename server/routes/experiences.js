@@ -984,7 +984,7 @@ router.get('/:id/download',
       // Allow access if: experience is published, or user is the owner, or user is admin
       const canAccess = experience.isPublished || 
                        experience.userId._id.toString() === req.user.id || 
-                       req.user.role === 'admin';
+                       ['Admin', 'SuperAdmin'].includes(req.user.role);
 
       if (!canAccess) {
         return res.status(403).json({
